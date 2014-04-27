@@ -77,45 +77,15 @@
 }
 
 - (void)setSecondViewAttribute:(id)secondViewAttribute {
-    if ([secondViewAttribute isKindOfClass:NSNumber.class]) {
-        self.layoutConstant = [secondViewAttribute doubleValue];
-    }  else if ([secondViewAttribute isKindOfClass:MAS_VIEW.class]) {
+    if ([secondViewAttribute isKindOfClass:NSValue.class]) {
+        [self _setLayoutConstantWithValue:secondViewAttribute];
+    } else if ([secondViewAttribute isKindOfClass:MAS_VIEW.class]) {
         _secondViewAttribute = [[MASViewAttribute alloc] initWithView:secondViewAttribute layoutAttribute:self.firstViewAttribute.layoutAttribute];
     } else if ([secondViewAttribute isKindOfClass:MASViewAttribute.class]) {
         _secondViewAttribute = secondViewAttribute;
     } else {
         NSAssert(NO, @"attempting to add unsupported attribute: %@", secondViewAttribute);
     }
-}
-
-#pragma mark - NSLayoutConstraint constant proxies
-
-- (MASConstraint * (^)(MASEdgeInsets))insets {
-    return ^id(MASEdgeInsets insets){
-        self.insets = insets;
-        return self;
-    };
-}
-
-- (MASConstraint * (^)(CGSize))sizeOffset {
-    return ^id(CGSize offset) {
-        self.sizeOffset = offset;
-        return self;
-    };
-}
-
-- (MASConstraint * (^)(CGPoint))centerOffset {
-    return ^id(CGPoint offset) {
-        self.centerOffset = offset;
-        return self;
-    };
-}
-
-- (MASConstraint * (^)(CGFloat))offset {
-    return ^id(CGFloat offset){
-        self.offset = offset;
-        return self;
-    };
 }
 
 #pragma mark - NSLayoutConstraint multiplier proxies
@@ -141,7 +111,7 @@
     };
 }
 
-#pragma mark - MASLayoutPriority proxies
+#pragma mark - MASLayoutPriority proxy
 
 - (MASConstraint * (^)(MASLayoutPriority))priority {
     return ^id(MASLayoutPriority priority) {
@@ -153,31 +123,10 @@
     };
 }
 
-- (MASConstraint * (^)())priorityLow {
-    return ^id{
-        self.priority(MASLayoutPriorityDefaultLow);
-        return self;
-    };
-}
+#pragma mark - NSLayoutRelation proxy
 
-- (MASConstraint * (^)())priorityMedium {
-    return ^id{
-        self.priority(MASLayoutPriorityDefaultMedium);
-        return self;
-    };
-}
-
-- (MASConstraint * (^)())priorityHigh {
-    return ^id{
-        self.priority(MASLayoutPriorityDefaultHigh);
-        return self;
-    };
-}
-
-#pragma mark - NSLayoutRelation proxies
-
-- (MASConstraint * (^)(id))equalityWithRelation:(NSLayoutRelation)relation {
-    return ^id(id attribute) {
+- (MASConstraint * (^)(id, NSLayoutRelation))_equalToWithRelation {
+    return ^id(id attribute, NSLayoutRelation relation) {
         if ([attribute isKindOfClass:NSArray.class]) {
             NSAssert(!self.hasLayoutRelation, @"Redefinition of constraint relation");
             NSMutableArray *children = NSMutableArray.new;
@@ -191,30 +140,12 @@
             [self.delegate constraint:self shouldBeReplacedWithConstraint:compositeConstraint];
             return compositeConstraint;
         } else {
-            NSAssert(!self.hasLayoutRelation || self.layoutRelation == relation && [attribute isKindOfClass:NSNumber.class], @"Redefinition of constraint relation");
+            NSAssert(!self.hasLayoutRelation || self.layoutRelation == relation && [attribute isKindOfClass:NSValue.class], @"Redefinition of constraint relation");
             self.layoutRelation = relation;
             self.secondViewAttribute = attribute;
             return self;
         }
     };
-}
-
-- (MASConstraint * (^)(id))equalTo {
-    return [self equalityWithRelation:NSLayoutRelationEqual];
-}
-
-- (MASConstraint * (^)(id))greaterThanOrEqualTo {
-    return [self equalityWithRelation:NSLayoutRelationGreaterThanOrEqual];
-}
-
-- (MASConstraint * (^)(id))lessThanOrEqualTo {
-    return [self equalityWithRelation:NSLayoutRelationLessThanOrEqual];
-}
-
-#pragma mark - Semantic properties
-
-- (MASConstraint *)with {
-    return self;
 }
 
 - (MASConstraint *)and {

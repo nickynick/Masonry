@@ -44,36 +44,6 @@
     return newConstraint;
 }
 
-#pragma mark - NSLayoutConstraint constant proxies
-
-- (MASConstraint * (^)(MASEdgeInsets))insets {
-    return ^id(MASEdgeInsets insets) {
-        self.insets = insets;
-        return self;
-    };
-}
-
-- (MASConstraint * (^)(CGFloat))offset {
-    return ^id(CGFloat offset) {
-        self.offset = offset;
-        return self;
-    };
-}
-
-- (MASConstraint * (^)(CGSize))sizeOffset {
-    return ^id(CGSize offset) {
-        self.sizeOffset = offset;
-        return self;
-    };
-}
-
-- (MASConstraint * (^)(CGPoint))centerOffset {
-    return ^id(CGPoint offset) {
-        self.centerOffset = offset;
-        return self;
-    };
-}
-
 #pragma mark - NSLayoutConstraint multiplier proxies 
 
 - (MASConstraint * (^)(CGFloat))multipliedBy {
@@ -94,7 +64,7 @@
     };
 }
 
-#pragma mark - MASLayoutPriority proxies
+#pragma mark - MASLayoutPriority proxy
 
 - (MASConstraint * (^)(MASLayoutPriority))priority {
     return ^id(MASLayoutPriority priority) {
@@ -105,51 +75,12 @@
     };
 }
 
-- (MASConstraint * (^)())priorityLow {
-    return ^id{
-        self.priority(MASLayoutPriorityDefaultLow);
-        return self;
-    };
-}
-
-- (MASConstraint * (^)())priorityMedium {
-    return ^id{
-        self.priority(MASLayoutPriorityDefaultMedium);
-        return self;
-    };
-}
-
-- (MASConstraint * (^)())priorityHigh {
-    return ^id{
-        self.priority(MASLayoutPriorityDefaultHigh);
-        return self;
-    };
-}
-
 #pragma mark - NSLayoutRelation proxies
 
-- (MASConstraint * (^)(id))equalTo {
-    return ^id(id attr) {
+- (MASConstraint * (^)(id, NSLayoutRelation))_equalToWithRelation {
+    return ^id(id attr, NSLayoutRelation relation) {
         for (MASConstraint *constraint in self.childConstraints.copy) {
-            constraint.equalTo(attr);
-        }
-        return self;
-    };
-}
-
-- (MASConstraint * (^)(id))greaterThanOrEqualTo {
-    return ^id(id attr) {
-        for (MASConstraint *constraint in self.childConstraints.copy) {
-            constraint.greaterThanOrEqualTo(attr);
-        }
-        return self;
-    };
-}
-
-- (MASConstraint * (^)(id))lessThanOrEqualTo {
-    return ^id(id attr) {
-        for (MASConstraint *constraint in self.childConstraints.copy) {
-            constraint.lessThanOrEqualTo(attr);
+            constraint._equalToWithRelation(attr, relation);
         }
         return self;
     };

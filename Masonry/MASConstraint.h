@@ -21,7 +21,7 @@
 
 /**
  *	Modifies the NSLayoutConstraint constant,
- *  only affects MASConstraints in which the first item's NSLayoutAttribute is one of the following 
+ *  only affects MASConstraints in which the first item's NSLayoutAttribute is one of the following
  *  NSLayoutAttributeTop, NSLayoutAttributeLeft, NSLayoutAttributeBottom, NSLayoutAttributeRight
  */
 - (MASConstraint * (^)(MASEdgeInsets insets))insets;
@@ -78,7 +78,7 @@
 /**
  *	Sets the constraint relation to NSLayoutRelationEqual
  *  returns a block which accepts one of the following:
- *    MASViewAttribute, UIView, NSNumber, NSArray
+ *    MASViewAttribute, UIView, NSValue, NSArray
  *  see readme for more details.
  */
 - (MASConstraint * (^)(id attr))equalTo;
@@ -86,7 +86,7 @@
 /**
  *	Sets the constraint relation to NSLayoutRelationGreaterThanOrEqual
  *  returns a block which accepts one of the following:
- *    MASViewAttribute, UIView, NSNumber, NSArray
+ *    MASViewAttribute, UIView, NSValue, NSArray
  *  see readme for more details.
  */
 - (MASConstraint * (^)(id attr))greaterThanOrEqualTo;
@@ -94,13 +94,13 @@
 /**
  *	Sets the constraint relation to NSLayoutRelationLessThanOrEqual
  *  returns a block which accepts one of the following:
- *    MASViewAttribute, UIView, NSNumber, NSArray
+ *    MASViewAttribute, UIView, NSValue, NSArray
  *  see readme for more details.
  */
 - (MASConstraint * (^)(id attr))lessThanOrEqualTo;
 
 /**
- *	optional semantic property which has no effect but improves the readability of constraint
+ *	Optional semantic property which has no effect but improves the readability of constraint
  */
 - (MASConstraint *)with;
 
@@ -190,6 +190,35 @@
 
 @end
 
+
+@interface MASConstraint (Private)
+
+/**
+ *  Modifies the NSLayoutConstraint constant based on a value type,
+ *  see _setLayoutConstantWithValue: for details
+ */
+- (MASConstraint * (^)(id))_valueOffset;
+
+/**
+ *  Based on a provided value type, is equal to calling:
+ *  NSNumber - setOffset:
+ *  NSValue with CGPoint - setPointOffset:
+ *  NSValue with CGSize - setSizeOffset:
+ *  NSValue with MASEdgeInsets - setInsets:
+ */
+- (void)_setLayoutConstantWithValue:(NSValue *)value;
+
+/**
+ *	Sets the constraint relation to given NSLayoutRelation
+ *  returns a block which accepts one of the following:
+ *    MASViewAttribute, UIView, NSValue, NSArray
+ *  see readme for more details.
+ */
+- (MASConstraint * (^)(id attr, NSLayoutRelation relation))_equalToWithRelation;
+
+@end
+
+
 @protocol MASConstraintDelegate <NSObject>
 
 /**
@@ -201,3 +230,38 @@
 - (MASConstraint *)constraint:(MASConstraint *)constraint addConstraintWithLayoutAttribute:(NSLayoutAttribute)layoutAttribute;
 
 @end
+
+
+/**
+ *  Convenience auto-boxing macros for MASConstraint methods.
+ *
+ *  Defining MAS_SHORTHAND_GLOBALS will turn on auto-boxing for default syntax.
+ *  A potential drawback of this is that the unprefixed macros will appear in global scope.
+ */
+#define mas_equalTo(...)                 _equalToWithRelation(MASBoxValue((__VA_ARGS__)), NSLayoutRelationEqual)
+#define mas_greaterThanOrEqualTo(...)    _equalToWithRelation(MASBoxValue((__VA_ARGS__)), NSLayoutRelationGreaterThanOrEqual)
+#define mas_lessThanOrEqualTo(...)       _equalToWithRelation(MASBoxValue((__VA_ARGS__)), NSLayoutRelationLessThanOrEqual)
+
+#define mas_offset(...)                  _valueOffset(MASBoxValue((__VA_ARGS__)))
+
+
+#ifdef MAS_SHORTHAND_GLOBALS
+
+#define equalTo(...)                     mas_equalTo(__VA_ARGS__)
+#define greaterThanOrEqualTo(...)        mas_greaterThanOrEqualTo(__VA_ARGS__)
+#define lessThanOrEqualTo(...)           mas_lessThanOrEqualTo(__VA_ARGS__)
+
+#define offset(...)                      mas_offset(__VA_ARGS__)
+
+#endif
+
+
+@interface MASConstraint (AutocompletionSupport)
+
+- (MASConstraint * (^)(id attr))mas_equalTo;
+- (MASConstraint * (^)(id attr))mas_greaterThanOrEqualTo;
+- (MASConstraint * (^)(id attr))mas_lessThanOrEqualTo;
+- (MASConstraint * (^)(id offset))mas_offset;
+
+@end
+
